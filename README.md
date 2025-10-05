@@ -1,85 +1,38 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-# BNI ATM Dashboard
-
-Dashboard Monitoring ATM & Outlet untuk wilayah Manado yang dibangun dengan Electron.
-
-## Features
-
-- 🗺️ Peta interaktif lokasi ATM dan Outlet
-- 📊 Dashboard dengan KPI dan analytics
-- ⏰ Monitoring jatuh tempo kontrak sewa
-- 🔍 Filter dan pencarian data
-- 📱 Responsive design
-- 💾 Export data functionality
-
-## Development
-
-### Prerequisites
-
-- Node.js (v16 atau lebih baru)
-- npm atau yarn
-
-### Installation
-
-1. Clone repository ini
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Jalankan aplikasi dalam mode development:
-   ```bash
-   npm run dev
-   ```
-
-### Build
-
-Untuk membuat executable:
-
-- Windows: `npm run build-win`
-- macOS: `npm run build-mac`
-- Linux: `npm run build-linux`
-- Semua platform: `npm run dist`
-
-## Project Structure
-
-```
-bni-map/
-├── main.js              # Electron main process
-├── index.html           # Dashboard UI
-├── package.json         # Dependencies dan scripts
-├── assets/              # Icons dan assets
-└── dist/                # Built executables
-```
-
-## Technologies Used
-
-- **Electron** - Desktop app framework
-- **Leaflet** - Interactive maps
-- **Chart.js** - Data visualization
-- **Font Awesome** - Icons
-- **HTML/CSS/JavaScript** - Frontend
-
-## Data Source
-
-Aplikasi ini menggunakan sample data untuk demo. Dalam implementasi produksi, data akan diambil dari database atau API.
-
-## License
-
-MIT License
-=======
-# dashboardmagang
->>>>>>> ef72e074580aec38858fee78d00714d172cb1bb3
-=======
-# dashboardmagang
 # BNI Map Dashboard
 
-A web-based dashboard for visualizing BNI ATM and CRM locations.
+An interactive dashboard application for visualizing and managing BNI ATM/CRM locations in Manado region.
 
-## Features
-- Interactive map visualization
-- KPI dashboard
-- Excel data processing
-- Location filtering
->>>>>>> a250af54de69ae5f19084adbf5797a0da7981ff3
+## 🚀 Features
+- Interactive map visualization with location markers
+- Real-time KPI dashboard showing key metrics
+- Excel data processing for location management
+- Advanced filtering and search capabilities
+- ATM and CRM status monitoring
+
+## 💻 Tech Stack
+- JavaScript (Node.js)
+- Leaflet.js for interactive maps
+- XLSX for Excel file processing
+- HTML/CSS for dashboard interface
+
+## 📦 Installation
+1. Clone the repository:
+```bash
+git clone https://github.com/MrcNatta/dashboardmagang.git
+cd dashboardmagang
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Place your Excel data file in the project root
+
+## 🔧 Usage
+1. Start the application:
+```bash
+npm start
+```
+
+2. Open your browser and navigate to the provided local URL
