@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring ATM & Outlet - Manado</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 2rem 2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .nav-section {
+            padding: 0 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .nav-item:hover {
+            background: var(--background);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+        }
+
+        /* Filters */
+        .filters {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filter-group {
+            min-width: 180px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            background: var(--surface);
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .kpi-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .kpi-icon.primary { background: rgb(37 99 235 / 0.1); color: var(--primary); }
+        .kpi-icon.success { background: rgb(16 185 129 / 0.1); color: var(--success); }
+        .kpi-icon.warning { background: rgb(245 158 11 / 0.1); color: var(--warning); }
+        .kpi-icon.danger { background: rgb(239 68 68 / 0.1); color: var(--danger); }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-trend {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Map Container */
+        .map-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--background);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: var(--background);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-critical {
+            background: rgb(239 68 68 / 0.1);
+            color: var(--danger);
+        }
+
+        .status-warning {
+            background: rgb(245 158 11 / 0.1);
+            color: var(--warning);
+        }
+
+        .status-safe {
+            background: rgb(16 185 129 / 0.1);
+            color: var(--success);
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+
+        .fab:hover {
+            background: var(--primary-light);
+            transform: scale(1.05);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .filters {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .chart-wrapper {
+                height: 250px;
+            }
+
+            #map {
+                height: 300px;
+            }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 10000;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--danger); }
+        .notification.warning { background: var(--warning); }
+        .notification.info { background: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-chart-line"></i> Dashboard ATM</h1>
+                <p>Sistem Monitoring Manado</p>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Menu Utama</div>
+                <div class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Peta Lokasi</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Peringatan</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Tools</div>
+                <div class="nav-item" onclick="exportData()">
+                    <i class="fas fa-download"></i>
+                    <span>Export Data</span>
+                </div>
+                <div class="nav-item" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Refresh</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h2>Dashboard Monitoring</h2>
+                <p>Sistem manajemen sewa lokasi ATM & Outlet</p>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">Tahun Jatuh Tempo</label>
+                    <select id="yearFilter" class="filter-input">
+                        <option value="all">Semua Tahun</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Jenis Mesin</label>
+                    <select id="typeFilter" class="filter-input">
+                        <option value="all">Semua Jenis</option>
+                        <option value="ATM">ATM</option>
+                        <option value="CRM">CRM</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status Kontrak</label>
+                    <select id="statusFilter" class="filter-input">
+                        <option value="all">Semua Status</option>
+                        <option value="critical">Kritis (< 3 bulan)</option>
+                        <option value="warning">Peringatan (< 6 bulan)</option>
+                        <option value="safe">Aman (> 6 bulan)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Cari Pemilik</label>
+                    <input type="text" id="ownerSearch" class="filter-input" placeholder="Nama pemilik...">
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total Biaya Sewa Tahunan</span>
+                        <div class="kpi-icon primary">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="totalCost">Rp 0</div>
+                    <div class="kpi-trend">↗ 5% dari tahun lalu</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Kontrak Berakhir 2025</span>
+                        <div class="kpi-icon warning">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="contracts2025">0</div>
+                    <div class="kpi-trend">Perlu perpanjangan</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total ATM</span>
+                        <div class="kpi-icon success">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="totalATM">0</div>
+                    <div class="kpi-trend">Mesin ATM aktif</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total CRM</span>
+                        <div class="kpi-icon success">
+                            <i class="fas fa-cash-register"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="totalCRM">0</div>
+                    <div class="kpi-trend">Mesin CRM aktif</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Rata-rata Biaya/Lokasi</span>
+                        <div class="kpi-icon primary">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="avgCost">Rp 0</div>
+                    <div class="kpi-trend">Per lokasi per tahun</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="map-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-map-marked-alt"></i>
+                            Peta Lokasi
+                        </h3>
+                    </div>
+                    <div id="map"></div>
+                    <div class="map-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #ef4444;"></div>
+                            <span>Kritis (< 3 bulan)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #f59e0b;"></div>
+                            <span>Peringatan (< 6 bulan)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #10b981;"></div>
+                            <span>Aman (> 6 bulan)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Biaya Sewa per Tahun
+                        </h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="yearlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Distribusi Biaya per Jenis
+                        </h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-line"></i>
+                            Trend Kontrak Berakhir
+                        </h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="expiryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 class="table-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Peringatan Jatuh Tempo Kontrak
+                    </h3>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Lokasi</th>
+                                <th>Jenis</th>
+                                <th>Pemilik</th>
+                                <th>Tanggal Berakhir</th>
+                                <th>Sisa Hari</th>
+                                <th>Biaya Sewa/Tahun</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="warningTableBody">
+                            <tr>
+                                <td colspan="7" class="loading">
+                                    <div class="spinner"></div>
+                                    Memuat data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <button class="fab" onclick="refreshData()" title="Refresh Data">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <script>
+        // Global variables
+        let locations = [];
+        let map;
+        let markers = [];
+        let charts = {};
+        let isLoading = false;
+
+        // Initialize dashboard
+        async function initDashboard() {
+            showLoadingState(true);
+            
+            try {
+                // Mock data for demonstration - replace with actual Electron API call
+                if (typeof window.electronAPI !== 'undefined') {
+                    locations = await window.electronAPI.loadData();
+                } else {
+                    // Fallback mock data for web preview
+                    locations = generateMockData();
+                }
+                
+                console.log('Loaded locations:', locations.length);
+                
+                if (locations.length === 0) {
+                    showError('Tidak ada data yang ditemukan. Pastikan file Excel tersedia.');
+                    return;
+                }
+                
+                initMap();
+                updateKPIs();
+                initCharts();
+                updateWarningTable();
+                initFilters();
+                
+                showLoadingState(false);
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showError('Error memuat data: ' + error.message);
+                showLoadingState(false);
+            }
+        }
+
+        // Generate mock data for preview
+        function generateMockData() {
+            const types = ['ATM', 'CRM'];
+            const owners = ['PT. Maju Jaya', 'CV. Sejahtera', 'UD. Berkah', 'PT. Mandiri', 'CV. Sukses'];
+            const mockData = [];
+            
+            for (let i = 0; i < 50; i++) {
+                const expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + Math.random() * 800); // Random date within 2+ years
+                
+                mockData.push({
+                    name: `Lokasi ${i + 1}`,
+                    type: types[Math.floor(Math.random() * types.length)],
+                    owner: owners[Math.floor(Math.random() * owners.length)],
+                    address: `Jalan Raya ${i + 1}, Manado`,
+                    lat: 1.4748 + (Math.random() - 0.5) * 0.1,
+                    lng: 124.8421 + (Math.random() - 0.5) * 0.1,
+                    yearlyRent: Math.floor(Math.random() * 50000000) + 10000000,
+                    expiryDate: expiryDate.toISOString().split('T')[0]
+                });
+            }
+            
+            return mockData;
+        }
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([1.4748, 124.8421], 12);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            updateMapMarkers();
+        }
+
+        // Update map markers
+        function updateMapMarkers() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            const filteredLocations = getFilteredLocations();
+            
+            filteredLocations.forEach(location => {
+                const daysUntilExpiry = getDaysUntilExpiry(location.expiryDate);
+                let color = '#10b981';
+                
+                if (daysUntilExpiry < 90) color = '#ef4444';
+                else if (daysUntilExpiry < 180) color = '#f59e0b';
+
+                const marker = L.circleMarker([location.lat, location.lng], {
+                    radius: 8,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+
+                marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <h4 style="margin: 0 0 8px 0;">${location.name}</h4>
+                        <p style="margin: 4px 0;"><strong>Jenis:</strong> ${location.type}</p>
+                        <p style="margin: 4px 0;"><strong>Pemilik:</strong> ${location.owner}</p>
+                        <p style="margin: 4px 0;"><strong>Alamat:</strong> ${location.address}</p>
+                        <p style="margin: 4px 0;"><strong>Jatuh Tempo:</strong> ${formatDate(location.expiryDate)}</p>
+                        <p style="margin: 4px 0;"><strong>Biaya:</strong> ${formatCurrency(location.yearlyRent)}/tahun</p>
+                        <p style="margin: 4px 0;"><strong>Status:</strong> ${getStatus(daysUntilExpiry)}</p>
+                    </div>
+                `);
+
+                marker.addTo(map);
+                markers.push(marker);
+            });
+        }
+
+        // Update KPIs
+        function updateKPIs() {
+            const filteredLocations = getFilteredLocations();
+            
+            const totalCost = filteredLocations.reduce((sum, loc) => sum + loc.yearlyRent, 0);
+            const contracts2025 = filteredLocations.filter(loc => new Date(loc.expiryDate).getFullYear() === 2025).length;
+            const totalATM = filteredLocations.filter(loc => loc.type === 'ATM').length;
+            const totalCRM = filteredLocations.filter(loc => loc.type === 'CRM').length;
+            const avgCost = filteredLocations.length > 0 ? totalCost / filteredLocations.length : 0;
+
+            document.getElementById('totalCost').textContent = formatCurrency(totalCost);
+            document.getElementById('contracts2025').textContent = contracts2025;
+            document.getElementById('totalATM').textContent = totalATM;
+            document.getElementById('totalCRM').textContent = totalCRM;
+            document.getElementById('avgCost').textContent = formatCurrency(avgCost);
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Yearly cost chart
+            const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
+            charts.yearly = new Chart(yearlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2025', '2026', '2027', '2028'],
+                    datasets: [{
+                        label: 'Total Biaya Sewa',
+                        data: getYearlyCosts(),
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderColor: '#2563eb',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#f8fafc',
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Total: ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { 
+                                color: '#e2e8f0',
+                                drawBorder: false 
+                            },
+                            border: { display: false },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value, true);
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        bar: {
+                            borderRadius: 8
+                        }
+                    }
+                }
+            });
+
+            // Type distribution chart
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            charts.type = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ATM', 'CRM'],
+                    datasets: [{
+                        data: getTypeCosts(),
+                        backgroundColor: ['#2563eb', '#10b981'],
+                        borderWidth: 0,
+                        cutout: '60%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: { size: 14 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#f8fafc',
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + formatCurrency(context.parsed);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Expiry trend chart
+            const expiryCtx = document.getElementById('expiryChart').getContext('2d');
+            charts.expiry = new Chart(expiryCtx, {
+                type: 'line',
+                data: {
+                    labels: getMonthLabels(),
+                    datasets: [{
+                        label: 'Kontrak Berakhir',
+                        data: getMonthlyExpiries(),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#f8fafc',
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { 
+                                color: '#e2e8f0',
+                                drawBorder: false 
+                            },
+                            border: { display: false },
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update warning table
+        function updateWarningTable() {
+            const tbody = document.getElementById('warningTableBody');
+            const filteredLocations = getFilteredLocations()
+                .map(loc => ({
+                    ...loc,
+                    daysUntilExpiry: getDaysUntilExpiry(loc.expiryDate)
+                }))
+                .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+
+            if (filteredLocations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Tidak ada data yang sesuai filter</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredLocations.map(location => {
+                const status = getStatus(location.daysUntilExpiry);
+                const statusClass = location.daysUntilExpiry < 90 ? 'critical' : 
+                                  location.daysUntilExpiry < 180 ? 'warning' : 'safe';
+                
+                return `
+                    <tr>
+                        <td><strong>${location.name}</strong></td>
+                        <td>${location.type}</td>
+                        <td>${location.owner}</td>
+                        <td>${formatDate(location.expiryDate)}</td>
+                        <td>${location.daysUntilExpiry} hari</td>
+                        <td>${formatCurrency(location.yearlyRent)}</td>
+                        <td><span class="status-badge status-${statusClass}">${status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Initialize filters
+        function initFilters() {
+            document.getElementById('yearFilter').addEventListener('change', applyFilters);
+            document.getElementById('typeFilter').addEventListener('change', applyFilters);
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('ownerSearch').addEventListener('input', applyFilters);
+        }
+
+        // Apply filters
+        function applyFilters() {
+            updateMapMarkers();
+            updateKPIs();
+            updateCharts();
+            updateWarningTable();
+        }
+
+        // Update charts data
+        function updateCharts() {
+            charts.yearly.data.datasets[0].data = getYearlyCosts();
+            charts.yearly.update('none');
+
+            charts.type.data.datasets[0].data = getTypeCosts();
+            charts.type.update('none');
+
+            charts.expiry.data.datasets[0].data = getMonthlyExpiries();
+            charts.expiry.update('none');
+        }
+
+        // Get filtered locations
+        function getFilteredLocations() {
+            const yearFilter = document.getElementById('yearFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const ownerSearch = document.getElementById('ownerSearch').value.toLowerCase();
+
+            return locations.filter(location => {
+                if (yearFilter !== 'all') {
+                    const expiryYear = new Date(location.expiryDate).getFullYear();
+                    if (expiryYear.toString() !== yearFilter) return false;
+                }
+
+                if (typeFilter !== 'all' && location.type !== typeFilter) {
+                    return false;
+                }
+
+                if (statusFilter !== 'all') {
+                    const daysUntilExpiry = getDaysUntilExpiry(location.expiryDate);
+                    if (statusFilter === 'critical' && daysUntilExpiry >= 90) return false;
+                    if (statusFilter === 'warning' && (daysUntilExpiry < 90 || daysUntilExpiry >= 180)) return false;
+                    if (statusFilter === 'safe' && daysUntilExpiry < 180) return false;
+                }
+
+                if (ownerSearch && !location.owner.toLowerCase().includes(ownerSearch)) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        // Utility functions
+        function getDaysUntilExpiry(expiryDate) {
+            const today = new Date();
+            const expiry = new Date(expiryDate);
+            const timeDiff = expiry - today;
+            return Math.ceil(timeDiff / (1000 * 3600 * 24));
+        }
+
+        function getStatus(daysUntilExpiry) {
+            if (daysUntilExpiry < 90) return 'Kritis';
+            if (daysUntilExpiry < 180) return 'Peringatan';
+            return 'Aman';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function formatCurrency(amount, short = false) {
+            if (short && amount >= 1000000) {
+                if (amount >= 1000000000) {
+                    return 'Rp ' + (amount / 1000000000).toFixed(1) + 'M';
+                }
+                return 'Rp ' + (amount / 1000000).toFixed(0) + 'Jt';
+            }
+
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Chart data functions
+        function getYearlyCosts() {
+            const years = ['2025', '2026', '2027', '2028'];
+            return years.map(year => {
+                return locations
+                    .filter(loc => new Date(loc.expiryDate).getFullYear().toString() === year)
+                    .reduce((sum, loc) => sum + loc.yearlyRent, 0);
+            });
+        }
+
+        function getTypeCosts() {
+            const atmCost = locations
+                .filter(loc => loc.type === 'ATM')
+                .reduce((sum, loc) => sum + loc.yearlyRent, 0);
+            const crmCost = locations
+                .filter(loc => loc.type === 'CRM')
+                .reduce((sum, loc) => sum + loc.yearlyRent, 0);
+            
+            return [atmCost, crmCost];
+        }
+
+        function getMonthLabels() {
+            return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        }
+
+        function getMonthlyExpiries() {
+            const months = Array(12).fill(0);
+            
+            locations.forEach(location => {
+                const expiryMonth = new Date(location.expiryDate).getMonth();
+                months[expiryMonth]++;
+            });
+            
+            return months;
+        }
+
+        // Refresh data function
+        async function refreshData() {
+            if (isLoading) return;
+            
+            const fab = document.querySelector('.fab i');
+            fab.style.animation = 'spin 1s linear infinite';
+            isLoading = true;
+            
+            try {
+                if (typeof window.electronAPI !== 'undefined') {
+                    locations = await window.electronAPI.refreshData();
+                } else {
+                    // Simulate refresh with new mock data
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    locations = generateMockData();
+                }
+                
+                console.log('Refreshed locations:', locations.length);
+                
+                updateMapMarkers();
+                updateKPIs();
+                updateCharts();
+                updateWarningTable();
+                
+                showNotification('Data berhasil diperbarui!', 'success');
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showNotification('Error memperbarui data: ' + error.message, 'error');
+            } finally {
+                fab.style.animation = '';
+                isLoading = false;
+            }
+        }
+
+        // Export data function
+        async function exportData() {
+            try {
+                if (typeof window.electronAPI !== 'undefined') {
+                    const result = await window.electronAPI.exportData(locations);
+                    if (result.success && !result.canceled) {
+                        showNotification(`Data berhasil diekspor ke: ${result.filePath}`, 'success');
+                    }
+                } else {
+                    // Fallback for web preview
+                    showNotification('Export functionality available in Electron app', 'info');
+                }
+            } catch (error) {
+                showNotification('Error mengekspor data: ' + error.message, 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, type === 'error' ? 5000 : 3000);
+        }
+
+        function showLoadingState(show) {
+            // Implementation for loading states
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        // Initialize dashboard when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(() => {
+                console.log('Auto-refreshing dashboard...');
+                refreshData();
+            }, 300000);
+
+            // Handle window resize for charts
+            window.addEventListener('resize', function() {
+                setTimeout(() => {
+                    if (charts.yearly) charts.yearly.resize();
+                    if (charts.type) charts.type.resize();
+                    if (charts.expiry) charts.expiry.resize();
+                }, 100);
+            });
+
+            // Mobile sidebar toggle
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            if (window.innerWidth <= 768) {
+                // Add mobile menu toggle functionality
+                const menuToggle = document.createElement('button');
+                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                menuToggle.className = 'menu-toggle';
+                menuToggle.style.cssText = `
+                    position: fixed;
+                    top: 1rem;
+                    left: 1rem;
+                    z-index: 1001;
+                    background: var(--primary);
+                    color: white;
+                    border: none;
+                    border-radius: 0.5rem;
+                    padding: 0.75rem;
+                    cursor: pointer;
+                    box-shadow: var(--shadow);
+                `;
+                
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+                
+                document.body.appendChild(menuToggle);
+                
+                // Close sidebar when clicking outside
+                mainContent.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
