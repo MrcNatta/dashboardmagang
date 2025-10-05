@@ -13,5 +13,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     showNotification: (message, type) => ipcRenderer.invoke('show-notification', message, type),
     
     // Development
-    isDev: process.env.NODE_ENV === 'development'
+    isDev: process.env.NODE_ENV === 'development',
+    
+    // New location operation
+    saveNewLocation: (data) => ipcRenderer.invoke('saveNewLocation', data),
+    deleteLocation: (locationId) => ipcRenderer.invoke('deleteLocation', locationId)
+    
 });

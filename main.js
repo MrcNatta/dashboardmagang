@@ -345,3 +345,23 @@ ipcMain.handle('show-notification', async (event, message, type) => {
 ipcMain.handle('navigate', (event, path) => {
     mainWindow.loadFile(path);
 });
+
+ipcMain.handle('saveNewLocation', async (event, newLocation) => {
+    try {
+        await dataProcessor.saveNewLocation(newLocation);
+        return { success: true };
+    } catch (error) {
+        console.error('Error saving new location:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('deleteLocation', async (event, locationId) => {
+    try {
+        await dataProcessor.deleteLocation(locationId);
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting location:', error);
+        return { success: false, error: error.message };
+    }
+});

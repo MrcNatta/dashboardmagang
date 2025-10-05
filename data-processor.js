@@ -271,6 +271,112 @@ class DataProcessor {
         this.lastModified = null; // Force reload
         return this.loadData();
     }
+    // Save a new location to the Excel file
+    async saveNewLocation(newLocation) {
+    try {
+        // Gunakan this.dataFile, bukan this.filePath
+        if (!this.fileExists()) {
+            throw new Error('Excel file not found');
+        }
+
+        // Read existing workbook
+        const workbook = XLSX.readFile(this.dataFile);
+        
+        // Use SEWA sheet
+        const sheetName = 'SEWA';
+        if (!workbook.SheetNames.includes(sheetName)) {
+            throw new Error(`Sheet "${sheetName}" not found`);
+        }
+        
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert worksheet to array of objects
+        const data = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Format new location for Excel (sesuaikan dengan header Excel Anda)
+        const excelRow = {
+            'LOKASI': newLocation.name,
+            'JENIS': newLocation.type,
+            ' PEMILIK ': newLocation.owner,
+            'ALAMAT': newLocation.address,
+            'TANGGAL BERAKHIR': newLocation.expiryDate,
+            ' BIAYA SEWA ': newLocation.yearlyRent,
+            'LATITUDE': newLocation.lat,
+            'LONGTITUDE': newLocation.lng  // Note: typo from original Excel
+        };
+        
+        // Add new row
+        data.push(excelRow);
+        
+        // Convert back to worksheet
+        const newWorksheet = XLSX.utils.json_to_sheet(data);
+        workbook.Sheets[sheetName] = newWorksheet;
+        
+        // Write back to file
+        XLSX.writeFile(workbook, this.dataFile);
+        
+        // Clear cache to force reload
+        this.lastModified = null;
+        
+        return true;
+    } catch (error) {
+        console.error('Error saving new location:', error);
+        throw error;
+    }
+
+    
+    }
+    //Delete file
+    async deleteLocation(locationId) {
+    try {
+        if (!this.fileExists()) {
+            throw new Error('Excel file not found');
+        }
+
+        // Read existing workbook
+        const workbook = XLSX.readFile(this.dataFile);
+        
+        // Use SEWA sheet
+        const sheetName = 'SEWA';
+        if (!workbook.SheetNames.includes(sheetName)) {
+            throw new Error(`Sheet "${sheetName}" not found`);
+        }
+        
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert worksheet to array of objects
+        let data = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Find and remove the location
+        const initialLength = data.length;
+        data = data.filter((row, index) => {
+            // Match by ID (index + 1) or by name
+            const rowId = index + 1;
+            const rowName = this.getFieldValue(row, ['LOKASI', 'Lokasi', 'NAMA ATM', 'Nama Lokasi', 'Location']);
+            
+            return rowId !== locationId && rowName !== locationId;
+        });
+        
+        if (data.length === initialLength) {
+            throw new Error('Location not found');
+        }
+        
+        // Convert back to worksheet
+        const newWorksheet = XLSX.utils.json_to_sheet(data);
+        workbook.Sheets[sheetName] = newWorksheet;
+        
+        // Write back to file
+        XLSX.writeFile(workbook, this.dataFile);
+        
+        // Clear cache to force reload
+        this.lastModified = null;
+        
+        return true;
+    } catch (error) {
+        console.error('Error deleting location:', error);
+        throw error;
+    }
+}
 }
 
 module.exports = DataProcessor;
