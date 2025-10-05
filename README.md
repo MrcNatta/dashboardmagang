@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BNI ATM Dashboard
 
 Dashboard Monitoring ATM & Outlet untuk wilayah Manado yang dibangun dengan Electron.
@@ -66,3 +67,6 @@ Aplikasi ini menggunakan sample data untuk demo. Dalam implementasi produksi, da
 ## License
 
 MIT License
+=======
+# dashboardmagang
+>>>>>>> ef72e074580aec38858fee78d00714d172cb1bb3
