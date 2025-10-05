@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics ATM & Outlet - Manado</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <link rel="stylesheet" href="peta-lokasi.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-chart-line"></i> Dashboard ATM</h1>
+                <p>Sistem Monitoring Manado</p>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Menu Utama</div>
+                <div class="nav-item" onclick="window.location.href='index.html'">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='peta-lokasi.html'">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Peta Lokasi</span>
+                </div>
+                <div class="nav-item active">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Peringatan</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Tools</div>
+                <div class="nav-item" onclick="exportData()">
+                    <i class="fas fa-download"></i>
+                    <span>Export Data</span>
+                </div>
+                <div class="nav-item" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Refresh</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h2>Analytics</h2>
+                <p>Analisis biaya dan tren kontrak ATM & CRM</p>
+            </div>
+
+            <div class="content-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Biaya Sewa per Tahun
+                        </h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="yearlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Distribusi Biaya per Jenis
+                        </h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-line"></i>
+                            Trend Kontrak Berakhir
+                        </h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="expiryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <button class="fab" onclick="refreshData()" title="Refresh Data">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <script>
+        let locations = [];
+        let charts = {};
+        let isLoading = false;
+
+        // Initialize analytics dashboard
+        async function initAnalytics() {
+            showLoadingState(true);
+            
+            try {
+                if (typeof window.electronAPI !== 'undefined') {
+                    locations = await window.electronAPI.loadData();
+                } else {
+                    locations = generateMockData();
+                }
+                
+                if (locations.length === 0) {
+                    showError('Tidak ada data yang ditemukan');
+                    return;
+                }
+
+                initCharts();
+                showLoadingState(false);
+            } catch (error) {
+                console.error('Error initializing analytics:', error);
+                showError('Error memuat data: ' + error.message);
+                showLoadingState(false);
+            }
+        }
+
+        // Copy all the chart-related functions from index.html
+        function initCharts() {
+            // Yearly cost chart
+            const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
+            charts.yearly = new Chart(yearlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2025', '2026', '2027', '2028'],
+                    datasets: [{
+                        label: 'Total Biaya Sewa',
+                        data: getYearlyCosts(),
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderColor: '#2563eb',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#f8fafc',
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Total: ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { 
+                                color: '#e2e8f0',
+                                drawBorder: false 
+                            },
+                            border: { display: false },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value, true);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Type distribution chart
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            charts.type = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ATM', 'CRM'],
+                    datasets: [{
+                        data: getTypeCosts(),
+                        backgroundColor: ['#2563eb', '#10b981'],
+                        borderWidth: 0,
+                        cutout: '60%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: { size: 14 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + formatCurrency(context.parsed);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Expiry trend chart
+            const expiryCtx = document.getElementById('expiryChart').getContext('2d');
+            charts.expiry = new Chart(expiryCtx, {
+                type: 'line',
+                data: {
+                    labels: getMonthLabels(),
+                    datasets: [{
+                        label: 'Kontrak Berakhir',
+                        data: getMonthlyExpiries(),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Copy all utility functions from index.html
+        function getYearlyCosts() {
+            const years = ['2025', '2026', '2027', '2028'];
+            return years.map(year => {
+                return locations
+                    .filter(loc => new Date(loc.expiryDate).getFullYear().toString() === year)
+                    .reduce((sum, loc) => sum + loc.yearlyRent, 0);
+            });
+        }
+
+        function getTypeCosts() {
+            const atmCost = locations
+                .filter(loc => loc.type === 'ATM')
+                .reduce((sum, loc) => sum + loc.yearlyRent, 0);
+            const crmCost = locations
+                .filter(loc => loc.type === 'CRM')
+                .reduce((sum, loc) => sum + loc.yearlyRent, 0);
+            return [atmCost, crmCost];
+        }
+
+        function getMonthLabels() {
+            return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        }
+
+        function getMonthlyExpiries() {
+            const months = Array(12).fill(0);
+            locations.forEach(location => {
+                const expiryMonth = new Date(location.expiryDate).getMonth();
+                months[expiryMonth]++;
+            });
+            return months;
+        }
+
+        function formatCurrency(amount, short = false) {
+            if (short && amount >= 1000000) {
+                return 'Rp ' + (amount / 1000000).toFixed(0) + 'Jt';
+            }
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Generate mock data function from index.html
+        function generateMockData() {
+            const types = ['ATM', 'CRM'];
+            const owners = ['PT. Maju Jaya', 'CV. Sejahtera', 'UD. Berkah', 'PT. Mandiri', 'CV. Sukses'];
+            const mockData = [];
+            
+            for (let i = 0; i < 50; i++) {
+                const expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + Math.random() * 800);
+                mockData.push({
+                    name: `Lokasi ${i + 1}`,
+                    type: types[Math.floor(Math.random() * types.length)],
+                    owner: owners[Math.floor(Math.random() * owners.length)],
+                    yearlyRent: Math.floor(Math.random() * 50000000) + 10000000,
+                    expiryDate: expiryDate.toISOString().split('T')[0]
+                });
+            }
+            return mockData;
+        }
+
+        // Notification and utility functions
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showLoadingState(show) {
+            // Add loading state implementation if needed
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        // Refresh data function
+        async function refreshData() {
+            if (isLoading) return;
+            
+            const fab = document.querySelector('.fab i');
+            fab.style.animation = 'spin 1s linear infinite';
+            isLoading = true;
+            
+            try {
+                if (typeof window.electronAPI !== 'undefined') {
+                    locations = await window.electronAPI.refreshData();
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    locations = generateMockData();
+                }
+                
+                Object.values(charts).forEach(chart => chart.destroy());
+                initCharts();
+                showNotification('Data berhasil diperbarui!', 'success');
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showNotification('Error memperbarui data: ' + error.message, 'error');
+            } finally {
+                fab.style.animation = '';
+                isLoading = false;
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initAnalytics);
+    </script>
+</body>
+</html>

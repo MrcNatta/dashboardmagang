@@ -340,3 +340,8 @@ ipcMain.handle('show-notification', async (event, message, type) => {
   console.log(`Notification (${type}): ${message}`);
   return true;
 });
+
+// Add this to handle new window
+ipcMain.handle('navigate', (event, path) => {
+    mainWindow.loadFile(path);
+});

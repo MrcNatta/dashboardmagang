@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Monitoring ATM & Outlet - Manado</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <style>
         :root {
             --primary: #2563eb;
@@ -22,17 +20,16 @@
             --text-muted: #64748b;
             --border: #e2e8f0;
             --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--background);
             color: var(--text);
             line-height: 1.6;
@@ -133,47 +130,6 @@
             color: var(--text-muted);
         }
 
-        /* Filters */
-        .filters {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            align-items: end;
-        }
-
-        .filter-group {
-            min-width: 180px;
-        }
-
-        .filter-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text);
-            margin-bottom: 0.5rem;
-        }
-
-        .filter-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            background: var(--surface);
-            font-size: 0.875rem;
-            transition: border-color 0.2s;
-        }
-
-        .filter-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
-        }
-
         /* KPI Cards */
         .kpi-grid {
             display: grid;
@@ -184,145 +140,44 @@
 
         .kpi-card {
             background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
             padding: 1.5rem;
-            transition: all 0.2s;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
         }
 
-        .kpi-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-1px);
-        }
-
-        .kpi-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .kpi-title {
+        .kpi-label {
             font-size: 0.875rem;
-            font-weight: 500;
             color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;  /* Added this line to make it bold */
         }
-
-        .kpi-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-        }
-
-        .kpi-icon.primary { background: rgb(37 99 235 / 0.1); color: var(--primary); }
-        .kpi-icon.success { background: rgb(16 185 129 / 0.1); color: var(--success); }
-        .kpi-icon.warning { background: rgb(245 158 11 / 0.1); color: var(--warning); }
-        .kpi-icon.danger { background: rgb(239 68 68 / 0.1); color: var(--danger); }
 
         .kpi-value {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 0.25rem;
+            color: var(--text);
         }
 
         .kpi-trend {
             font-size: 0.875rem;
-            color: var(--text-muted);
+            color: var(--success);
+            margin-top: 0.5rem;
         }
 
-        /* Content Grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 1200px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Chart Container */
-        .chart-container {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            height: fit-content;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .chart-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-
-        /* Map Container */
-        .map-container {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-        }
-
-        #map {
-            height: 400px;
-            border-radius: 0.75rem;
-            overflow: hidden;
-        }
-
-        .map-legend {
-            display: flex;
-            gap: 1.5rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        /* Table */
+        /* Table styles */
         .table-container {
             background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            overflow: hidden;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-top: 2rem;
         }
 
         .table-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
         .table-title {
@@ -333,181 +188,95 @@
             gap: 0.5rem;
         }
 
-        .table-wrapper {
-            overflow-x: auto;
+        /* Filter styles */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
-        table {
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .filter-input {
             width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: var(--background);
-            padding: 1rem 1.5rem;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text);
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border);
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
             font-size: 0.875rem;
         }
 
-        tr:hover {
-            background: var(--background);
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            transform: translateY(-1rem);
+            opacity: 0;
+            transition: all 0.3s;
         }
 
-        /* Status Badge */
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.025em;
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
         }
 
-        .status-critical {
-            background: rgb(239 68 68 / 0.1);
-            color: var(--danger);
+        .notification.success {
+            background: var(--success);
+            color: white;
         }
 
-        .status-warning {
-            background: rgb(245 158 11 / 0.1);
-            color: var(--warning);
+        .notification.error {
+            background: var(--danger);
+            color: white;
         }
 
-        .status-safe {
-            background: rgb(16 185 129 / 0.1);
-            color: var(--success);
-        }
-
-        /* Floating Action Button */
+        /* Floating action button */
         .fab {
             position: fixed;
             bottom: 2rem;
             right: 2rem;
-            width: 56px;
-            height: 56px;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 9999px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 50%;
-            box-shadow: var(--shadow-lg);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: all 0.2s;
-            z-index: 1000;
         }
 
         .fab:hover {
-            background: var(--primary-light);
             transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         .fab:active {
             transform: scale(0.95);
         }
 
-        /* Loading */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem;
-            color: var(--text-muted);
-        }
-
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid var(--border);
-            border-top: 2px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 1rem;
-        }
-
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-
-            .filters {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .filter-group {
-                min-width: 100%;
-            }
-
-            .kpi-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .content-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .chart-wrapper {
-                height: 250px;
-            }
-
-            #map {
-                height: 300px;
+            to {
+                transform: rotate(360deg);
             }
         }
-
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            color: white;
-            font-weight: 500;
-            box-shadow: var(--shadow-lg);
-            transform: translateX(100%);
-            transition: transform 0.3s;
-            z-index: 10000;
-            max-width: 300px;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success { background: var(--success); }
-        .notification.error { background: var(--danger); }
-        .notification.warning { background: var(--warning); }
-        .notification.info { background: var(--primary); }
     </style>
 </head>
 <body>
@@ -524,11 +293,11 @@
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" onclick="window.location.href='peta-lokasi.html'">
                     <i class="fas fa-map-marked-alt"></i>
                     <span>Peta Lokasi</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" onclick="window.location.href='analytics.html'"> 
                     <i class="fas fa-chart-bar"></i>
                     <span>Analytics</span>
                 </div>
@@ -600,7 +369,7 @@
                         </div>
                     </div>
                     <div class="kpi-value" id="totalCost">Rp 0</div>
-                    <div class="kpi-trend">↗ 5% dari tahun lalu</div>
+                    <div class="kpi-trend"></div>
                 </div>
                 
                 <div class="kpi-card">
@@ -649,30 +418,7 @@
             </div>
 
             <div class="content-grid">
-                <div class="map-container">
-                    <div class="chart-header">
-                        <h3 class="chart-title">
-                            <i class="fas fa-map-marked-alt"></i>
-                            Peta Lokasi
-                        </h3>
-                    </div>
-                    <div id="map"></div>
-                    <div class="map-legend">
-                        <div class="legend-item">
-                            <div class="legend-dot" style="background: #ef4444;"></div>
-                            <span>Kritis (< 3 bulan)</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-dot" style="background: #f59e0b;"></div>
-                            <span>Peringatan (< 6 bulan)</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-dot" style="background: #10b981;"></div>
-                            <span>Aman (> 6 bulan)</span>
-                        </div>
-                    </div>
-                </div>
-                
+                <!-- Remove these chart containers:
                 <div class="chart-container">
                     <div class="chart-header">
                         <h3 class="chart-title">
@@ -684,9 +430,7 @@
                         <canvas id="yearlyChart"></canvas>
                     </div>
                 </div>
-            </div>
 
-            <div class="content-grid">
                 <div class="chart-container">
                     <div class="chart-header">
                         <h3 class="chart-title">
@@ -698,7 +442,7 @@
                         <canvas id="typeChart"></canvas>
                     </div>
                 </div>
-                
+
                 <div class="chart-container">
                     <div class="chart-header">
                         <h3 class="chart-title">
@@ -710,6 +454,7 @@
                         <canvas id="expiryChart"></canvas>
                     </div>
                 </div>
+                -->
             </div>
 
             <div class="table-container">
@@ -753,9 +498,6 @@
     <script>
         // Global variables
         let locations = [];
-        let map;
-        let markers = [];
-        let charts = {};
         let isLoading = false;
 
         // Initialize dashboard
@@ -763,26 +505,21 @@
             showLoadingState(true);
             
             try {
-                // Mock data for demonstration - replace with actual Electron API call
                 if (typeof window.electronAPI !== 'undefined') {
                     locations = await window.electronAPI.loadData();
                 } else {
-                    // Fallback mock data for web preview
                     locations = generateMockData();
                 }
                 
                 console.log('Loaded locations:', locations.length);
                 
                 if (locations.length === 0) {
-                    showError('Tidak ada data yang ditemukan. Pastikan file Excel tersedia.');
+                    showError('Tidak ada data yang ditemukan');
                     return;
                 }
-                
-                initMap();
+
                 updateKPIs();
-                initCharts();
                 updateWarningTable();
-                initFilters();
                 
                 showLoadingState(false);
             } catch (error) {
@@ -885,162 +622,6 @@
             document.getElementById('avgCost').textContent = formatCurrency(avgCost);
         }
 
-        // Initialize charts
-        function initCharts() {
-            // Yearly cost chart
-            const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
-            charts.yearly = new Chart(yearlyCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['2025', '2026', '2027', '2028'],
-                    datasets: [{
-                        label: 'Total Biaya Sewa',
-                        data: getYearlyCosts(),
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        borderColor: '#2563eb',
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleColor: '#f8fafc',
-                            bodyColor: '#f8fafc',
-                            cornerRadius: 8,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Total: ' + formatCurrency(context.parsed.y);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            border: { display: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { 
-                                color: '#e2e8f0',
-                                drawBorder: false 
-                            },
-                            border: { display: false },
-                            ticks: {
-                                callback: function(value) {
-                                    return formatCurrency(value, true);
-                                }
-                            }
-                        }
-                    },
-                    elements: {
-                        bar: {
-                            borderRadius: 8
-                        }
-                    }
-                }
-            });
-
-            // Type distribution chart
-            const typeCtx = document.getElementById('typeChart').getContext('2d');
-            charts.type = new Chart(typeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['ATM', 'CRM'],
-                    datasets: [{
-                        data: getTypeCosts(),
-                        backgroundColor: ['#2563eb', '#10b981'],
-                        borderWidth: 0,
-                        cutout: '60%'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true,
-                                font: { size: 14 }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleColor: '#f8fafc',
-                            bodyColor: '#f8fafc',
-                            cornerRadius: 8,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': ' + formatCurrency(context.parsed);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Expiry trend chart
-            const expiryCtx = document.getElementById('expiryChart').getContext('2d');
-            charts.expiry = new Chart(expiryCtx, {
-                type: 'line',
-                data: {
-                    labels: getMonthLabels(),
-                    datasets: [{
-                        label: 'Kontrak Berakhir',
-                        data: getMonthlyExpiries(),
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#ef4444',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleColor: '#f8fafc',
-                            bodyColor: '#f8fafc',
-                            cornerRadius: 8,
-                            displayColors: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            border: { display: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { 
-                                color: '#e2e8f0',
-                                drawBorder: false 
-                            },
-                            border: { display: false },
-                            ticks: { stepSize: 1 }
-                        }
-                    }
-                }
-            });
-        }
-
         // Update warning table
         function updateWarningTable() {
             const tbody = document.getElementById('warningTableBody');
@@ -1085,22 +666,8 @@
 
         // Apply filters
         function applyFilters() {
-            updateMapMarkers();
             updateKPIs();
-            updateCharts();
             updateWarningTable();
-        }
-
-        // Update charts data
-        function updateCharts() {
-            charts.yearly.data.datasets[0].data = getYearlyCosts();
-            charts.yearly.update('none');
-
-            charts.type.data.datasets[0].data = getTypeCosts();
-            charts.type.update('none');
-
-            charts.expiry.data.datasets[0].data = getMonthlyExpiries();
-            charts.expiry.update('none');
         }
 
         // Get filtered locations
@@ -1173,42 +740,6 @@
             }).format(amount);
         }
 
-        // Chart data functions
-        function getYearlyCosts() {
-            const years = ['2025', '2026', '2027', '2028'];
-            return years.map(year => {
-                return locations
-                    .filter(loc => new Date(loc.expiryDate).getFullYear().toString() === year)
-                    .reduce((sum, loc) => sum + loc.yearlyRent, 0);
-            });
-        }
-
-        function getTypeCosts() {
-            const atmCost = locations
-                .filter(loc => loc.type === 'ATM')
-                .reduce((sum, loc) => sum + loc.yearlyRent, 0);
-            const crmCost = locations
-                .filter(loc => loc.type === 'CRM')
-                .reduce((sum, loc) => sum + loc.yearlyRent, 0);
-            
-            return [atmCost, crmCost];
-        }
-
-        function getMonthLabels() {
-            return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        }
-
-        function getMonthlyExpiries() {
-            const months = Array(12).fill(0);
-            
-            locations.forEach(location => {
-                const expiryMonth = new Date(location.expiryDate).getMonth();
-                months[expiryMonth]++;
-            });
-            
-            return months;
-        }
-
         // Refresh data function
         async function refreshData() {
             if (isLoading) return;
@@ -1221,16 +752,13 @@
                 if (typeof window.electronAPI !== 'undefined') {
                     locations = await window.electronAPI.refreshData();
                 } else {
-                    // Simulate refresh with new mock data
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     locations = generateMockData();
                 }
                 
                 console.log('Refreshed locations:', locations.length);
                 
-                updateMapMarkers();
                 updateKPIs();
-                updateCharts();
                 updateWarningTable();
                 
                 showNotification('Data berhasil diperbarui!', 'success');
