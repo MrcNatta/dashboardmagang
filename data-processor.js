@@ -1,11 +1,34 @@
 const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
+const { app } = require('electron');
 
 class DataProcessor {
     constructor() {
-        // Update dengan nama file Excel yang sesuai
-        this.dataFile = path.join(__dirname, 'DAFTAR SEWA ATM DAN OUTLET TERBARU 2025 v1 (6).xlsx');
+        const userDataPath = app.getPath('userData');
+        this.dataDir = path.join(userDataPath, 'data');
+        
+        // Create data directory if it doesn't exist
+        if (!fs.existsSync(this.dataDir)) {
+            fs.mkdirSync(this.dataDir, { recursive: true });
+        }
+
+        this.dataFile = path.join(this.dataDir, 'locations.xlsx');
+
+        // Initialize with template if file doesn't exist
+        if (!fs.existsSync(this.dataFile)) {
+            const templatePath = app.isPackaged
+                ? path.join(process.resourcesPath, 'locations.xlsx')
+                : path.join(__dirname, 'build', 'locations.xlsx');
+
+            if (!fs.existsSync(templatePath)) {
+                throw new Error(`Template file not found at: ${templatePath}`);
+            }
+
+            fs.copyFileSync(templatePath, this.dataFile);
+        }
+
+        console.log('Using data file:', this.dataFile);
         this.locations = [];
         this.lastModified = null;
     }
@@ -79,10 +102,12 @@ class DataProcessor {
         
         rawData.forEach((row, index) => {
             try {
-                const lokasi = this.getFieldValue(row, ['LOKASI', 'Lokasi', 'NAMA ATM', 'Nama Lokasi', 'Location']);
-                const jenis = this.getFieldValue(row, ['JENIS', 'Jenis', 'Type', 'JENIS MESIN']);
-                const expiryDateValue = this.getFieldValue(row, ['TANGGAL BERAKHIR', 'Tanggal Berakhir', 'Expiry Date', 'Jatuh Tempo']);
-                const yearlyRentValue = this.getFieldValue(row, [' BIAYA SEWA ', 'BIAYA SEWA', 'Biaya Sewa', 'Yearly Rent', 'Sewa Tahunan', 'Cost']);
+                const lokasi = this.getFieldValue(row, ['LOKASI', 'Lokasi', 'NAMA ATM']);
+                const jenis = this.getFieldValue(row, ['JENIS MESIN', 'JENIS', 'Jenis']);
+                const expiryDateValue = this.getFieldValue(row, ['TANGGAL BERAKHIR', 'Tanggal Berakhir']);
+                const yearlyRentValue = this.getFieldValue(row, ['BIAYA SEWA', ' BIAYA SEWA ', 'Biaya Sewa']);
+                const latitude = this.getFieldValue(row, ['LATITUDE', 'Latitude']);
+                const longitude = this.getFieldValue(row, ['LONGITUDE', 'LONGTITUDE']); // Handle both spellings
 
                 if (!lokasi || !jenis) {
                     return;
@@ -274,7 +299,6 @@ class DataProcessor {
     // Save a new location to the Excel file
     async saveNewLocation(newLocation) {
     try {
-        // Gunakan this.dataFile, bukan this.filePath
         if (!this.fileExists()) {
             throw new Error('Excel file not found');
         }
@@ -293,16 +317,16 @@ class DataProcessor {
         // Convert worksheet to array of objects
         const data = XLSX.utils.sheet_to_json(worksheet);
         
-        // Format new location for Excel (sesuaikan dengan header Excel Anda)
+        // Format new location for Excel
         const excelRow = {
             'LOKASI': newLocation.name,
-            'JENIS': newLocation.type,
-            ' PEMILIK ': newLocation.owner,
+            'JENIS MESIN': newLocation.type,
+            'PEMILIK': newLocation.owner,
             'ALAMAT': newLocation.address,
             'TANGGAL BERAKHIR': newLocation.expiryDate,
-            ' BIAYA SEWA ': newLocation.yearlyRent,
+            'BIAYA SEWA': newLocation.yearlyRent,
             'LATITUDE': newLocation.lat,
-            'LONGTITUDE': newLocation.lng  // Note: typo from original Excel
+            'LONGITUDE': newLocation.lng
         };
         
         // Add new row
@@ -315,8 +339,9 @@ class DataProcessor {
         // Write back to file
         XLSX.writeFile(workbook, this.dataFile);
         
-        // Clear cache to force reload
-        this.lastModified = null;
+        // Update internal cache
+        this.locations.push(newLocation);
+        this.lastModified = new Date();
         
         return true;
     } catch (error) {
@@ -328,55 +353,42 @@ class DataProcessor {
     }
     //Delete file
     async deleteLocation(locationId) {
-    try {
-        if (!this.fileExists()) {
-            throw new Error('Excel file not found');
-        }
+        try {
+            // Read current data
+            const workbook = XLSX.readFile(this.dataFile);
+            const sheetName = 'SEWA';
+            const worksheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(worksheet);
 
-        // Read existing workbook
-        const workbook = XLSX.readFile(this.dataFile);
-        
-        // Use SEWA sheet
-        const sheetName = 'SEWA';
-        if (!workbook.SheetNames.includes(sheetName)) {
-            throw new Error(`Sheet "${sheetName}" not found`);
+            // Find index of location to delete
+            const index = data.findIndex(loc => 
+                loc.LOKASI === locationId || 
+                loc['NAMA ATM'] === locationId
+            );
+
+            if (index === -1) {
+                throw new Error(`Location "${locationId}" not found`);
+            }
+
+            // Remove the location
+            data.splice(index, 1);
+
+            // Update Excel file
+            const newWorksheet = XLSX.utils.json_to_sheet(data);
+            workbook.Sheets[sheetName] = newWorksheet;
+            XLSX.writeFile(workbook, this.dataFile);
+
+            // Update internal cache
+            this.locations = this.locations.filter(loc => 
+                loc.name !== locationId
+            );
+
+            return true;
+        } catch (error) {
+            console.error('Error deleting location:', error);
+            throw error;
         }
-        
-        const worksheet = workbook.Sheets[sheetName];
-        
-        // Convert worksheet to array of objects
-        let data = XLSX.utils.sheet_to_json(worksheet);
-        
-        // Find and remove the location
-        const initialLength = data.length;
-        data = data.filter((row, index) => {
-            // Match by ID (index + 1) or by name
-            const rowId = index + 1;
-            const rowName = this.getFieldValue(row, ['LOKASI', 'Lokasi', 'NAMA ATM', 'Nama Lokasi', 'Location']);
-            
-            return rowId !== locationId && rowName !== locationId;
-        });
-        
-        if (data.length === initialLength) {
-            throw new Error('Location not found');
-        }
-        
-        // Convert back to worksheet
-        const newWorksheet = XLSX.utils.json_to_sheet(data);
-        workbook.Sheets[sheetName] = newWorksheet;
-        
-        // Write back to file
-        XLSX.writeFile(workbook, this.dataFile);
-        
-        // Clear cache to force reload
-        this.lastModified = null;
-        
-        return true;
-    } catch (error) {
-        console.error('Error deleting location:', error);
-        throw error;
     }
-}
 }
 
 module.exports = DataProcessor;

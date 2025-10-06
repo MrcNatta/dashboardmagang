@@ -249,21 +249,46 @@ function createMenu() {
 }
 
 // This method will be called when Electron has finished initialization
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    try {
+        // Ensure data directory exists
+        const userDataPath = app.getPath('userData');
+        const dataDir = path.join(userDataPath, 'data');
+        
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+            
+            // Copy template Excel file
+            const templateFile = app.isPackaged 
+                ? path.join(process.resourcesPath, 'data', 'locations.xlsx')
+                : path.join(__dirname, 'data', 'locations.xlsx');
 
-// Quit when all windows are closed
-app.on('window-all-closed', () => {
-  // On macOS it is common for applications to stay active until quit explicitly
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+            if (fs.existsSync(templateFile)) {
+                fs.copyFileSync(templateFile, path.join(dataDir, 'locations.xlsx'));
+            }
+        }
+
+        const mainWindow = createWindow();
+
+        // Handle window creation for macOS
+        app.on('activate', () => {
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createWindow();
+            }
+        });
+    } catch (error) {
+        console.error('Error during app initialization:', error);
+        dialog.showErrorBox(
+            'Initialization Error',
+            `Failed to initialize the application: ${error.message}`
+        );
+    }
 });
 
-app.on('activate', () => {
-  // On macOS re-create a window when the dock icon is clicked
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
 // Security: Prevent new window creation

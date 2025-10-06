@@ -18,5 +18,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // New location operation
     saveNewLocation: (data) => ipcRenderer.invoke('saveNewLocation', data),
     deleteLocation: (locationId) => ipcRenderer.invoke('deleteLocation', locationId)
-    
 });

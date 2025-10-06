@@ -1,56 +1,62 @@
 {
-  "name": "bni-atm-dashboard",
+  "name": "bni-map",
   "version": "1.0.0",
-  "description": "Dashboard Monitoring ATM & Outlet - Manado",
+  "description": "Dashboard Monitoring ATM & Outlet BNI Manado",
+  "author": {
+    "name": "Nathan",
+    "email": "naelmiracle106@gmail.com"
+  },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev",
-    "build-win": "electron-builder --win",
-    "build-mac": "electron-builder --mac",
-    "build-linux": "electron-builder --linux",
-    "dist": "electron-builder"
-  },
-  "keywords": [
-    "electron",
-    "dashboard",
-    "atm",
-    "monitoring",
-    "bni"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "dependencies": {
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "electron": "^27.0.0",
-    "electron-builder": "^24.6.4",
-    "electron-reload": "^2.0.0-alpha.1"
+    "build": "electron-builder"
   },
   "build": {
-    "appId": "com.bni.atm-dashboard",
-    "productName": "BNI ATM Dashboard",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "**/*",
-      "!node_modules",
-      "!dist",
-      "!*.md"
-    ],
+    "appId": "com.bni.map",
+    "productName": "BNI Map Monitor",
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
       "icon": "assets/icon.ico"
     },
-    "mac": {
-      "target": "dmg",
-      "icon": "assets/icon.icns"
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
-    "linux": {
-      "target": "AppImage",
-      "icon": "assets/icon.png"
-    }
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "extraResources": [
+      {
+        "from": "build/locations.xlsx",
+        "to": "locations.xlsx"
+      }
+    ],
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^25.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
   }
 }
